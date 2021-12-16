@@ -1,218 +1,226 @@
 import sys
-import copy
-import json
-
-class CRC(object):
-    ESCAPE_CHAR = b'\x7D'
-    MAX_PAYLOAD_VAL = 25
-    OFFSET=4
-    flag_stuff = 0
-
-    key_list=[  'Delimiter_1st_position',
-                'Length',
-                'Control',
-                'Opcode',
-                'Payload_1_byte',
-                'Payload_2_byte',
-                'Payload_3_byte',
-                'Payload_4_byte',
-                'Payload_5_byte',
-                'Payload_6_byte',
-                'Payload_7_byte',
-                'Payload_8_byte',
-                'Payload_9_byte',
-                'Payload_10_byte',
-                'Payload_11_byte',
-                'Payload_12_byte',
-                'Payload_13_byte',
-                'Payload_14_byte',
-                'Payload_15_byte',
-                'Payload_16_byte',
-                'Payload_17_byte',
-                'Payload_18_byte',
-                'Payload_19_byte',
-                'Payload_20_byte',
-                'Payload_21_byte',
-                'Payload_22_byte',
-                'Payload_23_byte',
-                'Payload_24_byte',
-                'Payload_25_byte',
-                'Checksum',
-                'Delimiter_last_position']
-    Request_Package = {};
-    Encapsulate_Package = {};
-    Response_Package = {};
-    Basic_Package = dict(Delimiter_1st_position=b'\x7E', Length=b'\x30', Control=b'\x00', Opcode=b'\x17',
-                         Payload_1_byte=b'\x01', Payload_2_byte=b'\x02', Payload_3_byte=b'\x03', Payload_4_byte=b'\x04',
-                         Payload_5_byte=b'\x05', Payload_6_byte=b'\x06', Payload_7_byte=b'\x07', Payload_8_byte=b'\x08',
-                         Payload_9_byte=b'\x09', Payload_10_byte=b'\x0A', Payload_11_byte=b'\x0B',
-                         Payload_12_byte=b'\x0C', Payload_13_byte=b'\x0D', Payload_14_byte=b'\x0E',
-                         Payload_15_byte=b'\x0F', Payload_16_byte=b'\x11', Payload_17_byte=b'\x10',
-                         Payload_18_byte=b'\x11', Payload_19_byte=b'\x12', Payload_20_byte=b'\x13',
-                         Payload_21_byte=b'\x14', Payload_22_byte=b'\x15', Payload_23_byte=b'\x16',
-                         Payload_24_byte=b'\x17', Payload_25_byte=b'\x18', Checksum=b'\x34',
-                         Delimiter_last_position=b'\x87')
-    send_package:list()
-
-    def __init__(self, polynomial=0x9B, crc_len=8):
-        self.poly = polynomial & 0xFF
-        self.crc_len = crc_len
-        self.table_len = pow(2, crc_len)
-        self.cs_table = [' ' for x in range(self.table_len)]
-
-        self.Request_Package = copy.deepcopy(self.Basic_Package)
-        self.generate_table()
-
-    def generate_table(self):
-        for i in range(len(self.cs_table)):
-            curr = i
-
-            for j in range(8):
-                if (curr & 0x80) != 0:
-                    curr = ((curr << 1) & 0xFF) ^ self.poly
-                else:
-                    curr <<= 1
-
-            self.cs_table[i] = curr
-
-    def print_table(self):
-        for i in range(len(self.cs_table)):
-            sys.stdout.write(hex(self.cs_table[i]).upper().replace('X', 'x'))
-
-            if (i + 1) % 16:
-                sys.stdout.write(' ')
-            else:
-                sys.stdout.write('\n')
-
-    def calculate(self, arr, dist=None):
-        crc = 0
-
-        try:
-            if dist:
-                indicies = dist
-            else:
-                indicies = len(arr)
-
-            for i in range(indicies):
-                try:
-                    nex_el = int(arr[i])
-                except ValueError:
-                    nex_el = ord(arr[i])
-
-                crc = self.cs_table[crc ^ nex_el]
-
-        except TypeError:
-            crc = self.cs_table[arr]
-
-        return crc
-
-    def encapsulte(self, opcode:int, payload:list):
-        temp_payload: list = copy.deepcopy(payload)
-        lengthofpayload: int = (len(temp_payload))-1
-
-        try:
-            if len(temp_payload):
-                #key_list()
-                #indicies = dist
-                print("list is not empty")
-            else:
-                print("list is empty")
-
-            for t in range(0,lengthofpayload):
-                try:
-                    #stuff_Byte
-                    if payload[t] == 126:#b'\x7E':
-                        print("**********found 7e byte***************")
-                        self.flag_stuff = 1
-                        temp_loc_i= payload[t]
-                        temp_loc_i_plus_1= payload[t+1]
-                        payload.insert(t, b'\x7d')
-                        temp_loc_i^(1<<5)#flip_bit_location_5
-                        payload.insert(t+1, temp_loc_i)
-                        payload.insert(t+2, temp_loc_i_plus_1)
-
-                except ValueError:
-                    print("Dictionary stuff bytes update exception")
-
-            if(self.flag_stuff == 1):
-                self.flag_stuff = 0
-                lengthofpayload += 1
-
-            self.Encapsulate_Package = copy.deepcopy(self.Basic_Package)
-
-            for i in range(0,lengthofpayload):
-                 try:
-                    self.Encapsulate_Package[self.key_list[i+self.OFFSET]] = temp_payload[i];#insert payload to package
-                    #print("temp_payload[i]=",temp_payload[i])
-                    #print("elf.Encapsulate_Package[self.key_list[i+self.OFFSET]]=",self.Encapsulate_Package[self.key_list[i]])
-                 except ValueError:
-                    print("Dictionary encapsulate update exception")
-
-            for j in range((self.OFFSET+lengthofpayload),(self.MAX_PAYLOAD_VAL+self.OFFSET)):
-                try:
-                    print("enter delete location=",j)
-                    #print("enter delete items iteration=",(self.MAX_PAYLOAD_VAL-lengthofpayload))
-                    print("enter delete KEY=",self.key_list[j])
-                    print("enter delete VALUE=",self.Encapsulate_Package[self.key_list[j]])
-                    del self.Encapsulate_Package[self.key_list[j]]
-                   # self.removekeyValue(self.Encapsulate_Package,self.key_list[j+lengthofpayload])
-                except ValueError:
-                    print("Dictionary encapsulate remove items from payload exception")
-                    #nex_el = ord(arr[i])
-
-                #crc = self.cs_table[crc ^ nex_el]
+import functools
 
 
-        except TypeError:
-            print("TypeError exception2")
-            #crc = self.cs_table[arr]
-        return 0
+class Write_Read_Packet_Cls(object):
+    global write_package
 
-    def dict_to_binary(the_dict):
-        str = json.dumps(the_dict)
-        binary = ' '.join(format(ord(letter), 'b') for letter in str)
-        return binary
+    global read_package
+    global opcode
+    global read_request_channel_index
+    global channel_mask_location
 
-    def binary_to_dict(the_binary):
-        jsn = ''.join(chr(int(x, 2)) for x in the_binary.split())
-        d = json.loads(jsn)
-        return d
+    global channels_read
+    global measured_voltage_read
 
-    def dic_2_list(self,the_dictionary):
-        self.send_package=[*the_dictionary.values()]
-        return self.send_package
+    def __init__(self):
+        self.write_package: bytearray = 0
 
-myCRC = CRC(polynomial=0x9B, crc_len=8)
-#print(myCRC.calculate([2, 5, 8, 1]))
-print(myCRC.calculate([2, 5, 8, 1,10,23,45,67]))
+        self.read_package: bytearray = 0
+        self.opcode: int = 0
+        self.read_request_channel_index: int = 0
+        self.channel_mask_location: int = 0
 
-print("type(Basic_Package)=",type(myCRC.Basic_Package))
-print("Basic_Package=",myCRC.Basic_Package)
+        self.channels_read: bytearray = 0
+        self.measured_voltage_read: bytearray = 0
 
-result = bytes.fromhex("84")
-amir=b'\x87'
-print("Result=",result)
-print("amir=",amir)
-print("Hello World")
+    def write_encapsulate_frame(self, opcode, payload: list):
+        print(" payload tx =", payload)
 
-myCRC2 = CRC(polynomial=0x9B, crc_len=8)
+        tmp_payload = bytearray(payload)
+        index_7e: int = tmp_payload.find(126)
 
-list1=[15,126,19,12,5]
-opcode= 124#int(b'\xd7')
-myCRC2.encapsulte(opcode,list1)
+        if index_7e == -1:
+            print("Not Found 7e ")
+        else:
+            print("Found 7e at location ", index_7e)
+            tmp_payload.insert(index_7e, 125)  # 7D
+            tmp_payload.insert(index_7e + 1, tmp_payload[index_7e + 1] ^ (1 << 5))  # 7E inverted bit 5
+            del tmp_payload[index_7e + 2:index_7e + 3]  # 7E deleted
 
-#test=byte_array(myCRC2.Encapsulate_Package)
+        packet_length: int = len(tmp_payload) + 2
+        print("Write packet_length = ", packet_length)
+        self.write_package = bytearray(tmp_payload)
+        self.write_package.insert(0, 126)  # 1st Delimiter byte
+        self.write_package.insert(1, packet_length)  # length byte
+        self.write_package.insert(2, 0)  # Control byte
+        self.write_package.insert(3, int(opcode))  # Opcode byte
+        print("Write first element checksum = ", self.write_package[1])
+        print("Write Last element checksum = ", self.write_package[packet_length + 1])
+        self.write_package.append(self.write_read_calc_checksum(self.write_package[1:packet_length + 2]))  # Checksum
+        self.write_package.append(126)  # Last Delimiter byte
+        for x in self.write_package: print(x)
+        print()
+        for y in self.write_package: print(hex(y))
+        print()
+        return self.write_package
+
+    def write_read_calc_checksum(self, lst: list):
+        print("calc checksum write lst = ", lst)
+        return functools.reduce(lambda x, y: x + y, lst) % 256
+
+    def handle_read_opcode_0x3b(self):  # , rx_pack_opcode_0x3b:bytearray):
+        print("channels_read=", self.channels_read)
+        # self.channels_read.append(rx_pack_opcode_0x3B[5] & 0xE0)
+        # self.channels_read.append(rx_pack_opcode_0x3B[9] & 0xE0)
+        # self.channels_read.append(rx_pack_opcode_0x3B[13] & 0xE0)
+        # self.channels_read.append(rx_pack_opcode_0x3B[17] & 0xE0)
+        # self.channels_read.append(rx_pack_opcode_0x3B[21] & 0xE0)
+
+        # print("channels_read=", self.channels_read)
+
+        # self.measured_voltage_read.append(rx_pack_opcode_0x3B[5:8])
+        # self.measured_voltage_read.append(rx_pack_opcode_0x3B[9:12])
+        # self.measured_voltage_read.append(rx_pack_opcode_0x3B[13:15])
+        # self.measured_voltage_read.append(rx_pack_opcode_0x3B[17:20])
+        # self.measured_voltage_read.append(rx_pack_opcode_0x3B[21:24])
+
+        # print("measured_voltage_read=", self.measured_voltage_read)
+        # return 0
+
+    def encapsulate_read_frame(self, read_payload: list):
+        # print(" payload rx =", read_payload)
+        self.read_package = bytearray(read_payload)
+        packet_length: int = len(self.read_package)
+        calc_read_checksum: int = self.write_read_calc_checksum(self.read_package[1:packet_length - 2])  # Checksum
+
+        if calc_read_checksum == self.read_package[packet_length - 2]:
+            print("Correct Read Checksum", calc_read_checksum)
+        else:
+            print("Error in Read Checksum calculated checksum = ", calc_read_checksum, "Received checksum =",
+                  self.read_package[packet_length - 2])
+
+        index_7d: int = self.read_package.find(125)
+
+        if index_7d == -1:
+            print("Not Found 7d ")
+        else:
+            print("Found 7d at location ", index_7d)
+            self.read_package[index_7d + 1] = (self.read_package[index_7d + 1] ^ (1 << 5))  # 7E inverted bit 5
+            del self.read_package[index_7d:index_7d + 1]  # 7E deleted
+
+        temp_rd_pck = self.read_package
+
+        if self.read_package[3] == 0x3B:
+            print("3B detected : ", self.read_package)
+            # self.handle_read_opcode_0x3b()
+
+        for x in self.read_package: print(x)
+        print()
+        for y in self.read_package: print(hex(y))
+        print()
+        return self.read_package
+
+    def access_bit(self, data, num):
+        base = int(num // 8)
+        shift = int(num % 8)
+        return (data[base] >> shift) & 0x1
+
+    # def read_channel_and_milivolt(self,rd_packet:bytearray):
+    #     milivolt:int=0
+    #     print("rd_packet[x:x+2]=", rd_packet[0:2])
+    #     self.channel_mask_location = self.rd_packet[0:1] & 0xE0  # bits 7:5 are relevant for channel
+    #     milivolt = self.rd_packet[0:3] & 0x1F_FF_FF  # bits 7:5 are relevant for channel
+    #     print("milivolt=", milivolt)
+    #     return milivolt
+
+    def extractKBits(num, k, p):
+        # convert number into binary first
+        binary = bin(num)
+
+        # remove first two characters
+        binary = binary[2:]
+
+        end = len(binary) - p
+        start = end - k + 1
+
+        # extract k  bit sub-string
+        kBitSubStr = binary[start: end + 1]
+
+        # convert extracted sub-string into decimal again
+        print(int(kBitSubStr, 2))
+
+
+myWrite_read_Packet_Cls_Obj = Write_Read_Packet_Cls()
+
+print("================  Write First try   ==========================")
+
+myWrite_read_Packet_Cls_Obj.write_encapsulate_frame(0x12, [1, 7, 0, 8, 0])
+
+print("=========================================================\n\n\n")
+
+print("==================Write Second try ======================")
+
+myWrite_read_Packet_Cls_Obj.write_encapsulate_frame(0x12, [1, 7, 0, 8, 0, 36, 126, 53])
+
+print("=========================================================\n\n\n")
+
+# myRead_Packet_Cls2 = Read_Packet_Cls()
+
+print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  Read First try  $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+
+read_test_packet: list = (126, 7, 0, 18, 1, 7, 0, 8, 0, 41, 126)
+myWrite_read_Packet_Cls_Obj.encapsulate_read_frame(read_test_packet)
+print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n\n\n")
+
+print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Read Second try $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+
+read_test2_packet: list = (126, 11, 0, 18, 1, 7, 0, 8, 0, 36, 125, 94, 53, 97, 126)
+myWrite_read_Packet_Cls_Obj.encapsulate_read_frame(read_test2_packet)
+
+print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n\n\n")
+
+print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Read 3rd try $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+
+read_test3_packet: list = (126, 18, 0, 59, 0, 0, 0, 2, 32, 0, 1, 64, 0, 0, 160, 0, 0, 192, 0, 16, 32, 126)
+myWrite_read_Packet_Cls_Obj.encapsulate_read_frame(read_test3_packet)
+
+print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n\n\n")
+channels_read2 = bytes(myWrite_read_Packet_Cls_Obj.read_package)
+# channels_read2.append(myWrite_read_Packet_Cls_Obj.read_package[5] & 0xE0)
+# channels_read2.append(myWrite_read_Packet_Cls_Obj.read_package[9] & 0xE0)
+# channels_read2.append(myWrite_read_Packet_Cls_Obj.read_package[13] & 0xE0)
+# channels_read2.append(myWrite_read_Packet_Cls_Obj.read_package[17] & 0xE0)
+# channels_read2.append(myWrite_read_Packet_Cls_Obj.read_package[21] & 0xE0)
+
+print("channels_read2=", channels_read2)
+
+# measured_voltage_read2=bytes(myWrite_read_Packet_Cls_Obj.read_package)
+index_i: int = 5
+sliced_meas_volt1 = bytearray(myWrite_read_Packet_Cls_Obj.read_package[index_i:index_i + 3])
+sliced_meas_volt2 = bytearray(myWrite_read_Packet_Cls_Obj.read_package[index_i + 4:index_i + 7])
+sliced_meas_volt3 = bytearray(myWrite_read_Packet_Cls_Obj.read_package[index_i + 8:index_i + 11])
+sliced_meas_volt4 = bytearray(myWrite_read_Packet_Cls_Obj.read_package[index_i + 12:index_i + 15])
+sliced_meas_volt5 = bytearray(myWrite_read_Packet_Cls_Obj.read_package[index_i + 16:index_i + 19])
+print("sliced_meas_volt_1=", sliced_meas_volt1)
+print("sliced_meas_volt_2=", sliced_meas_volt2)
+print("sliced_meas_volt_3=", sliced_meas_volt3)
+print("sliced_meas_volt_4=", sliced_meas_volt4)
+print("sliced_meas_volt_5=", sliced_meas_volt5)
+
+# measured_voltage_read2.append(myWrite_read_Packet_Cls_Obj.read_package[5:8])
+# measured_voltage_read2.append(myWrite_read_Packet_Cls_Obj.read_package[9:12])
+# measured_voltage_read2.append(myWrite_read_Packet_Cls_Obj.read_package[13:15])
+# measured_voltage_read2.append(myWrite_read_Packet_Cls_Obj.read_package[17:20])
+# measured_voltage_read2.append(myWrite_read_Packet_Cls_Obj.read_package[21:24])
+
+# print("measured_voltage_read2=", measured_voltage_read2)
+# return 0
+print([myWrite_read_Packet_Cls_Obj.access_bit(myWrite_read_Packet_Cls_Obj.read_package, y) for y in
+       range(len(myWrite_read_Packet_Cls_Obj.read_package) * 8)])
+
+print("sliced_meas_volt1=",
+      [myWrite_read_Packet_Cls_Obj.access_bit(sliced_meas_volt1, y) for y in range(len(sliced_meas_volt1) * 8)])
+print("sliced_meas_volt2=",
+      [myWrite_read_Packet_Cls_Obj.access_bit(sliced_meas_volt2, y) for y in range(len(sliced_meas_volt2) * 8)])
+print("sliced_meas_volt3=",
+      [myWrite_read_Packet_Cls_Obj.access_bit(sliced_meas_volt3, y) for y in range(len(sliced_meas_volt3) * 8)])
+print("sliced_meas_volt4=",
+      [myWrite_read_Packet_Cls_Obj.access_bit(sliced_meas_volt4, y) for y in range(len(sliced_meas_volt4) * 8)])
+print("sliced_meas_volt5=",
+      [myWrite_read_Packet_Cls_Obj.access_bit(sliced_meas_volt5, y) for y in range(len(sliced_meas_volt5) * 8)])
+
+sys.exit()
 
 
 
-#print(myCRC.calculate([2, 5, 8, 1]))
-print("myCRC2.key_list = ",myCRC2.key_list)
-print("myCRC2.RequestPackage = ",myCRC2.key_list)
-print("myCRC2 = ",myCRC2.calculate([myCRC2.Encapsulate_Package.get('Opcode'), myCRC2.Encapsulate_Package.get('Payload_1_byte'), myCRC2.Encapsulate_Package.get('Payload_2_byte'), 1,10,23,45,67]))
-print("myCRC2.Encapsulate_Package AFTER = ",myCRC2.Encapsulate_Package)
-print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-
-#s = json.dumps(myCRC2.Encapsulate_Package)
-variables2:list = myCRC2.dic_2_list(myCRC2.Encapsulate_Package)
-#assert variables == variables2
-print("variables2=",variables2)
