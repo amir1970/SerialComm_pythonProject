@@ -1,6 +1,6 @@
 import sys
 import functools
-import struct
+
 
 class Write_Read_Packet_Cls(object):
     global write_package
@@ -59,16 +59,24 @@ class Write_Read_Packet_Cls(object):
         print("calc checksum write lst = ", lst)
         return functools.reduce(lambda x, y: x + y, lst) % 256
 
-    def handle_read_opcode_0x3b(self,read_packet_btained):  # , rx_pack_opcode_0x3b:bytearray):
-        list_index: list = [5, 9, 13, 17, 21]
-        meas_result = []
-        print("meas_result", meas_result)
-        for index_i in list_index:
-            int_val1: int = int.from_bytes(read_packet_btained[index_i:index_i + 3], "big")
-            print("index i is = ", index_i, "struct.pack1 new = ", int_val1)
-            meas_result.append(int_val1)
-            print("meas_result after append", meas_result)
-            return meas_result
+    def handle_read_opcode_0x3b(self):  # , rx_pack_opcode_0x3b:bytearray):
+        print("channels_read=", self.channels_read)
+        # self.channels_read.append(rx_pack_opcode_0x3B[5] & 0xE0)
+        # self.channels_read.append(rx_pack_opcode_0x3B[9] & 0xE0)
+        # self.channels_read.append(rx_pack_opcode_0x3B[13] & 0xE0)
+        # self.channels_read.append(rx_pack_opcode_0x3B[17] & 0xE0)
+        # self.channels_read.append(rx_pack_opcode_0x3B[21] & 0xE0)
+
+        # print("channels_read=", self.channels_read)
+
+        # self.measured_voltage_read.append(rx_pack_opcode_0x3B[5:8])
+        # self.measured_voltage_read.append(rx_pack_opcode_0x3B[9:12])
+        # self.measured_voltage_read.append(rx_pack_opcode_0x3B[13:15])
+        # self.measured_voltage_read.append(rx_pack_opcode_0x3B[17:20])
+        # self.measured_voltage_read.append(rx_pack_opcode_0x3B[21:24])
+
+        # print("measured_voltage_read=", self.measured_voltage_read)
+        # return 0
 
     def encapsulate_read_frame(self, read_payload: list):
         # print(" payload rx =", read_payload)
@@ -95,7 +103,7 @@ class Write_Read_Packet_Cls(object):
 
         if self.read_package[3] == 0x3B:
             print("3B detected : ", self.read_package)
-            self.handle_read_opcode_0x3b(self.read_package)
+            # self.handle_read_opcode_0x3b()
 
         for x in self.read_package: print(x)
         print()
@@ -168,27 +176,27 @@ read_test3_packet: list = (126, 18, 0, 59, 0, 0, 0, 2, 32, 0, 1, 64, 0, 0, 160, 
 myWrite_read_Packet_Cls_Obj.encapsulate_read_frame(read_test3_packet)
 
 print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n\n\n")
-#channels_read2 = bytes(myWrite_read_Packet_Cls_Obj.read_package)
+channels_read2 = bytes(myWrite_read_Packet_Cls_Obj.read_package)
 # channels_read2.append(myWrite_read_Packet_Cls_Obj.read_package[5] & 0xE0)
 # channels_read2.append(myWrite_read_Packet_Cls_Obj.read_package[9] & 0xE0)
 # channels_read2.append(myWrite_read_Packet_Cls_Obj.read_package[13] & 0xE0)
 # channels_read2.append(myWrite_read_Packet_Cls_Obj.read_package[17] & 0xE0)
 # channels_read2.append(myWrite_read_Packet_Cls_Obj.read_package[21] & 0xE0)
 
-#print("channels_read2=", channels_read2)
+print("channels_read2=", channels_read2)
 
 # measured_voltage_read2=bytes(myWrite_read_Packet_Cls_Obj.read_package)
-# index_i: int = 5
-# sliced_meas_volt1 = bytearray(myWrite_read_Packet_Cls_Obj.read_package[index_i:index_i + 3])
-# sliced_meas_volt2 = bytearray(myWrite_read_Packet_Cls_Obj.read_package[index_i + 4:index_i + 7])
-# sliced_meas_volt3 = bytearray(myWrite_read_Packet_Cls_Obj.read_package[index_i + 8:index_i + 11])
-# sliced_meas_volt4 = bytearray(myWrite_read_Packet_Cls_Obj.read_package[index_i + 12:index_i + 15])
-# sliced_meas_volt5 = bytearray(myWrite_read_Packet_Cls_Obj.read_package[index_i + 16:index_i + 19])
-# print("sliced_meas_volt_1=", sliced_meas_volt1)
-# print("sliced_meas_volt_2=", sliced_meas_volt2)
-# print("sliced_meas_volt_3=", sliced_meas_volt3)
-# print("sliced_meas_volt_4=", sliced_meas_volt4)
-# print("sliced_meas_volt_5=", sliced_meas_volt5)
+index_i: int = 5
+sliced_meas_volt1 = bytearray(myWrite_read_Packet_Cls_Obj.read_package[index_i:index_i + 3])
+sliced_meas_volt2 = bytearray(myWrite_read_Packet_Cls_Obj.read_package[index_i + 4:index_i + 7])
+sliced_meas_volt3 = bytearray(myWrite_read_Packet_Cls_Obj.read_package[index_i + 8:index_i + 11])
+sliced_meas_volt4 = bytearray(myWrite_read_Packet_Cls_Obj.read_package[index_i + 12:index_i + 15])
+sliced_meas_volt5 = bytearray(myWrite_read_Packet_Cls_Obj.read_package[index_i + 16:index_i + 19])
+print("sliced_meas_volt_1=", sliced_meas_volt1)
+print("sliced_meas_volt_2=", sliced_meas_volt2)
+print("sliced_meas_volt_3=", sliced_meas_volt3)
+print("sliced_meas_volt_4=", sliced_meas_volt4)
+print("sliced_meas_volt_5=", sliced_meas_volt5)
 
 # measured_voltage_read2.append(myWrite_read_Packet_Cls_Obj.read_package[5:8])
 # measured_voltage_read2.append(myWrite_read_Packet_Cls_Obj.read_package[9:12])
@@ -198,45 +206,19 @@ print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 # print("measured_voltage_read2=", measured_voltage_read2)
 # return 0
-# print([myWrite_read_Packet_Cls_Obj.access_bit(myWrite_read_Packet_Cls_Obj.read_package, y) for y in
-#        range(len(myWrite_read_Packet_Cls_Obj.read_package) * 8)])
-#
-# print("sliced_meas_volt1=",
-#       [myWrite_read_Packet_Cls_Obj.access_bit(sliced_meas_volt1, y) for y in range(len(sliced_meas_volt1) * 8)])
-# print("sliced_meas_volt2=",
-#       [myWrite_read_Packet_Cls_Obj.access_bit(sliced_meas_volt2, y) for y in range(len(sliced_meas_volt2) * 8)])
-# print("sliced_meas_volt3=",
-#       [myWrite_read_Packet_Cls_Obj.access_bit(sliced_meas_volt3, y) for y in range(len(sliced_meas_volt3) * 8)])
-# print("sliced_meas_volt4=",
-#       [myWrite_read_Packet_Cls_Obj.access_bit(sliced_meas_volt4, y) for y in range(len(sliced_meas_volt4) * 8)])
-# print("sliced_meas_volt5=",
-#       [myWrite_read_Packet_Cls_Obj.access_bit(sliced_meas_volt5, y) for y in range(len(sliced_meas_volt5) * 8)])
+print([myWrite_read_Packet_Cls_Obj.access_bit(myWrite_read_Packet_Cls_Obj.read_package, y) for y in
+       range(len(myWrite_read_Packet_Cls_Obj.read_package) * 8)])
 
-#var = struct.pack(sliced_meas_volt1)
-list_index:list=[5,9,13,17,21]
-meas_result=[]
-print("meas_result",meas_result)
-for index_i in list_index:
-    #print("index i is = ",index_i)
-    int_val1: int = int.from_bytes(myWrite_read_Packet_Cls_Obj.read_package[index_i:index_i + 3], "big")
-    print("index i is = ",index_i,"struct.pack1 new = ", int_val1)
-    meas_result.append(int_val1)
-    print("meas_result after append",meas_result)
-
-#meas_result.append(5)
-#index_i: int = 5
-#int_val1 = int.from_bytes(myWrite_read_Packet_Cls_Obj.read_package[index_i:index_i + 3], "big")
-#int_val2 = int.from_bytes(myWrite_read_Packet_Cls_Obj.read_package[index_i+4:index_i + 7], "big")
-#int_val3 = int.from_bytes(myWrite_read_Packet_Cls_Obj.read_package[index_i+8:index_i + 11], "big")
-#int_val4 = int.from_bytes(myWrite_read_Packet_Cls_Obj.read_package[index_i+12:index_i + 15], "big")
-#int_val5 = int.from_bytes(myWrite_read_Packet_Cls_Obj.read_package[index_i+16:index_i + 19], "big")
-
-#print("struct.pack1 new = ",int_val1)
-#print("struct.pack2 = ",int_val2)
-#print("struct.pack3 = ",int_val3)
-#print("struct.pack4 = ",int_val4)
-#print("struct.pack5 = ",int_val5)
-#print("struct.pack",var)
+print("sliced_meas_volt1=",
+      [myWrite_read_Packet_Cls_Obj.access_bit(sliced_meas_volt1, y) for y in range(len(sliced_meas_volt1) * 8)])
+print("sliced_meas_volt2=",
+      [myWrite_read_Packet_Cls_Obj.access_bit(sliced_meas_volt2, y) for y in range(len(sliced_meas_volt2) * 8)])
+print("sliced_meas_volt3=",
+      [myWrite_read_Packet_Cls_Obj.access_bit(sliced_meas_volt3, y) for y in range(len(sliced_meas_volt3) * 8)])
+print("sliced_meas_volt4=",
+      [myWrite_read_Packet_Cls_Obj.access_bit(sliced_meas_volt4, y) for y in range(len(sliced_meas_volt4) * 8)])
+print("sliced_meas_volt5=",
+      [myWrite_read_Packet_Cls_Obj.access_bit(sliced_meas_volt5, y) for y in range(len(sliced_meas_volt5) * 8)])
 
 sys.exit()
 
