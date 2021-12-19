@@ -90,7 +90,9 @@ class Write_Read_Packet_Cls(object):
             int_chan_sel = (int_chan_sel & filter_channel_num)>>5
             channel_selected.append(int_chan_sel)
             int_meas: int = int.from_bytes(read_packet_obtained[3*index_i+5:3*index_i+8], "big")
+            print(" %%%%%%%  DEBUG ONLY %%%%%%% index_i = ",index_i , "int_meas BEFORE FILTER HEX = " , hex(int_meas))
             int_meas = int_meas & filter_meas
+            print(" &&&&&  DEBUG ONLY &&&&&  index_i = ",index_i , "int_meas AFTER FILTER HEX = " , hex(int_meas))
             meas_result.append(int_meas)
         print("channel_selected new = ", channel_selected)
         print("meas_result after append", meas_result)
