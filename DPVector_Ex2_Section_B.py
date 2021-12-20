@@ -1,15 +1,24 @@
+
 import numpy as np
+import operator
 
 class DPVector(object):
+    def __init__(self, *num):
+        self.num = num
 
-    def __init__(self, x: int, y: int) :
-        self.first_num = x
-        self.second_num = y
+    def __repr__(self):
+        return 'DPVector_obj{}'.format(self.num)
 
-    def add_numbers(self):
-        result = np.add(self.first_num, self.second_num)
-        print("Adding 2 numbers = ", result)
+    def __mul__(self, other):
+        print("*** DEBUG ONLY MULT ***** Join  list is : ",(self.num+other.num))
+        print("*** DEBUG ONLY MULT *****  1st couple is : ",(self.num[0]),"*",(other.num[1]), "=",(self.num[0]) * (other.num[1]))
+        print("*** DEBUG ONLY MULT *****  2nd couple is : ",(self.num[1]),"*",(other.num[0]), "=",(self.num[1]) * (other.num[0]))
+        mul_one= ((self.num[0]) * (other.num[1])+(self.num[1]) * (other.num[0]))
+        print("mul_one MULT list sum is : ")
+        return mul_one
 
 
-DPVector_obj = DPVector(4,5)
-DPVector_obj.add_numbers()
+a= DPVector(1,4)
+b= DPVector(2,5)
+
+print(a*b)
