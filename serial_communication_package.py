@@ -8,15 +8,15 @@ from re import match
 
 
 class Write_Read_Packet_Cls(object):
-    global write_package
-
-    global read_package
-    global opcode
-    global read_request_channel_index
-    global channel_mask_location
-
-    global channels_read
-    global measured_voltage_read
+    # global write_package
+    #
+    # global read_package
+    # global opcode
+    # global read_request_channel_index
+    # global channel_mask_location
+    #
+    # global channels_read
+    # global measured_voltage_read
 
     def __init__(self):
         self.write_package: bytearray = 0
